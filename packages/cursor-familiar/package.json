@@ -1,0 +1,46 @@
+{
+  "name": "cursor-familiar",
+  "version": "0.0.1",
+  "description": "Animated pixel companions for the web.",
+  "license": "MIT",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "file": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "react",
+    "cursor",
+    "sprite",
+    "pixel-art",
+    "animation",
+    "companion",
+    "retro",
+    "cursor-follower"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iampankajghosh/cursor-familiar.git"
+  },
+  "homepage": "https://github.com/iampankajghosh/cursor-familiar",
+  "bugs": {
+    "url": "https://github.com/iampankajghosh/cursor-familiar/issues"
+  },
+  "author": "Pankaj Ghosh",
+  "type": "module",
+  "scripts": {
+    "build": "bunchee",
+    "dev": "bunchee --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3"
+  }
+}
