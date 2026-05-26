@@ -3,11 +3,10 @@
   "version": "0.0.1",
   "description": "Animated pixel companions for the web.",
   "license": "MIT",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "file": [
-    "dist"
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": false,
   "keywords": [
@@ -30,6 +29,13 @@
   },
   "author": "Pankaj Ghosh",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
     "build": "bunchee",
     "dev": "bunchee --watch",
