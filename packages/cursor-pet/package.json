@@ -1,5 +1,5 @@
 {
-  "name": "cursor-familiar",
+  "name": "cursor-pet",
   "version": "0.0.1",
   "description": "Animated pixel companions for the web.",
   "license": "MIT",
@@ -21,11 +21,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iampankajghosh/cursor-familiar.git"
+    "url": "git+https://github.com/iampankajghosh/cursor-pet.git"
   },
-  "homepage": "https://github.com/iampankajghosh/cursor-familiar",
+  "homepage": "https://github.com/iampankajghosh/cursor-pet",
   "bugs": {
-    "url": "https://github.com/iampankajghosh/cursor-familiar/issues"
+    "url": "https://github.com/iampankajghosh/cursor-pet/issues"
   },
   "author": "Pankaj Ghosh",
   "type": "module",

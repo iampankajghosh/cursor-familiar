@@ -1,13 +1,13 @@
 {
-  "name": "cursor-familiar-workspace",
+  "name": "cursor-pet-workspace",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm -r build",
-    "build:package": "pnpm --filter cursor-familiar build",
-    "pack:package": "pnpm --dir packages/cursor-familiar pack",
-    "release:check": "pnpm build:package && pnpm pack:package && tar -tf packages/cursor-familiar/cursor-familiar-0.0.1.tgz",
+    "build:package": "pnpm --filter cursor-pet build",
+    "pack:package": "pnpm --dir packages/cursor-pet pack",
+    "release:check": "pnpm build:package && pnpm pack:package && tar -tf packages/cursor-pet/cursor-pet-0.0.1.tgz",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo",
     "lint": "pnpm -r lint"

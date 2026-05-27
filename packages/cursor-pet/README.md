@@ -1,15 +1,15 @@
-# cursor-familiar
+# cursor-pet
 
 Animated pixel companions for the web.
 
 ## Install
 
 ```bash
-npm install cursor-familiar
+npm install cursor-pet
 ```
 
 ```bash
-pnpm add cursor-familiar
+pnpm add cursor-pet
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ pnpm add cursor-familiar
 ```tsx
 "use client";
 
-import { CursorCompanion } from "cursor-familiar";
+import { CursorCompanion } from "cursor-pet";
 
 export default function App() {
   return <CursorCompanion spriteImage="/sprites/cat.png" />;
