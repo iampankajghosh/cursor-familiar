@@ -1,3 +1,3 @@
-export { CursorCompanion } from "./CursorCompanion";
+export { default } from "./CursorPet";
 
-export type { CursorCompanionProps, SpriteFrame } from "./CursorCompanion";
+export type { CursorPetProps, SpriteFrame } from "./CursorPet";

@@ -1,34 +1,42 @@
 {
   "name": "cursor-pet",
-  "version": "0.0.1",
-  "description": "Animated pixel companions for the web.",
+  "version": "1.0.0",
+  "description": "Animated pixel pets that follow your cursor.",
   "license": "MIT",
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "public"
   ],
   "sideEffects": false,
   "keywords": [
     "react",
     "cursor",
-    "sprite",
+    "cursor-pet",
     "pixel-art",
+    "sprite",
+    "sprite-sheet",
     "animation",
-    "companion",
+    "cursor-follower",
     "retro",
-    "cursor-follower"
+    "game-ui",
+    "pixel",
+    "react-component"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iampankajghosh/cursor-pet.git"
   },
-  "homepage": "https://github.com/iampankajghosh/cursor-pet",
+  "homepage": "https://github.com/iampankajghosh/cursor-pet#readme",
   "bugs": {
     "url": "https://github.com/iampankajghosh/cursor-pet/issues"
   },
   "author": "Pankaj Ghosh",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -47,6 +55,8 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.15",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "bunchee": "^6.5.4",
+    "typescript": "^5.9.3"
   }
 }
