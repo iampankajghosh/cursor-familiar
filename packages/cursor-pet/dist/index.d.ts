@@ -5,7 +5,8 @@ interface SpriteFrame {
     y: number;
     duration: number;
 }
-interface CursorCompanionProps {
+type ToggleModifier = "alt" | "ctrl" | "shift" | "meta";
+interface CursorPetProps {
     spriteImage: string;
     spriteSize?: number;
     moveFrames?: readonly SpriteFrame[];
@@ -14,9 +15,11 @@ interface CursorCompanionProps {
     reactionDelay?: number;
     stopDistance?: number;
     homeStopDistance?: number;
+    toggleKey?: string;
+    toggleModifier?: ToggleModifier;
     className?: string;
 }
-declare function CursorCompanion({ spriteImage, spriteSize, moveFrames, idleFrames, speed, reactionDelay, stopDistance, homeStopDistance, className, }: CursorCompanionProps): react_jsx_runtime.JSX.Element;
+declare function CursorPet({ spriteImage, spriteSize, moveFrames, idleFrames, speed, reactionDelay, stopDistance, homeStopDistance, toggleKey, toggleModifier, className, }: CursorPetProps): react_jsx_runtime.JSX.Element;
 
-export { CursorCompanion };
-export type { CursorCompanionProps, SpriteFrame };
+export { CursorPet as default };
+export type { CursorPetProps, SpriteFrame };
