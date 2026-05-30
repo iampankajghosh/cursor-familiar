@@ -1,5 +1,134 @@
 import { jsx } from 'react/jsx-runtime';
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+
+function useCursorPetMovement({ speed, spriteSize, reactionDelay, stopDistance, homeStopDistance, toggleKey, toggleModifier, positionRef, targetRef, lastMouseRef, scaleXRef, isMovingRef, isActiveRef, movementDelayTimeoutRef, rafRef, renderTransform }) {
+    const normalizedToggleKey = toggleKey.toLowerCase();
+    useEffect(()=>{
+        let mounted = true;
+        const tick = ()=>{
+            if (!mounted) return;
+            const current = positionRef.current;
+            const target = targetRef.current;
+            const dx = target.x - current.x;
+            const dy = target.y - current.y;
+            const distance = Math.hypot(dx, dy);
+            const threshold = isActiveRef.current ? stopDistance : homeStopDistance;
+            if (isMovingRef.current) {
+                if (distance > threshold) {
+                    const angle = Math.atan2(dy, dx);
+                    current.x += Math.cos(angle) * speed;
+                    current.y += Math.sin(angle) * speed;
+                    if (dx > 1) {
+                        scaleXRef.current = 1;
+                    } else if (dx < -1) {
+                        scaleXRef.current = -1;
+                    }
+                } else {
+                    isMovingRef.current = false;
+                    if (!isActiveRef.current) {
+                        scaleXRef.current = 1;
+                    }
+                }
+                renderTransform();
+            }
+            rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+        return ()=>{
+            mounted = false;
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
+        };
+    }, [
+        speed,
+        stopDistance,
+        homeStopDistance,
+        positionRef,
+        targetRef,
+        scaleXRef,
+        isMovingRef,
+        isActiveRef,
+        rafRef,
+        renderTransform
+    ]);
+    useEffect(()=>{
+        const startMovement = ()=>{
+            const dx = targetRef.current.x - positionRef.current.x;
+            const dy = targetRef.current.y - positionRef.current.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance > stopDistance && isActiveRef.current) {
+                isMovingRef.current = true;
+            }
+            movementDelayTimeoutRef.current = null;
+        };
+        const handleMouseMove = (event)=>{
+            const nextPosition = {
+                x: event.clientX - spriteSize / 2,
+                y: event.clientY - spriteSize / 2
+            };
+            lastMouseRef.current = nextPosition;
+            if (!isActiveRef.current) return;
+            targetRef.current = nextPosition;
+            if (isMovingRef.current) return;
+            if (!movementDelayTimeoutRef.current) {
+                movementDelayTimeoutRef.current = setTimeout(startMovement, reactionDelay);
+            }
+        };
+        const handleKeyDown = (event)=>{
+            const modifierPressed = toggleModifier === "alt" && event.altKey || toggleModifier === "ctrl" && event.ctrlKey || toggleModifier === "shift" && event.shiftKey || toggleModifier === "meta" && event.metaKey;
+            if (modifierPressed && event.key.toLowerCase() === normalizedToggleKey) {
+                event.preventDefault();
+                isActiveRef.current = !isActiveRef.current;
+                if (!isActiveRef.current) {
+                    targetRef.current = {
+                        x: 0,
+                        y: 0
+                    };
+                    if (movementDelayTimeoutRef.current) {
+                        clearTimeout(movementDelayTimeoutRef.current);
+                        movementDelayTimeoutRef.current = null;
+                    }
+                } else {
+                    targetRef.current = {
+                        ...lastMouseRef.current
+                    };
+                }
+                isMovingRef.current = true;
+            }
+        };
+        const handleVisibilityChange = ()=>{
+            if (document.hidden) {
+                isMovingRef.current = false;
+            }
+        };
+        window.addEventListener("mousemove", handleMouseMove, {
+            passive: true
+        });
+        window.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return ()=>{
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            if (movementDelayTimeoutRef.current) {
+                clearTimeout(movementDelayTimeoutRef.current);
+            }
+        };
+    }, [
+        reactionDelay,
+        spriteSize,
+        stopDistance,
+        normalizedToggleKey,
+        toggleModifier,
+        positionRef,
+        targetRef,
+        lastMouseRef,
+        isMovingRef,
+        isActiveRef,
+        movementDelayTimeoutRef
+    ]);
+}
 
 const DEFAULT_SPRITE_SIZE = 32;
 const DEFAULT_MOVE_FRAMES = [
@@ -96,7 +225,7 @@ const DEFAULT_IDLE_FRAMES = [
         duration: 400
     }
 ];
-function CursorPet({ spriteImage, spriteSize = DEFAULT_SPRITE_SIZE, moveFrames = DEFAULT_MOVE_FRAMES, idleFrames = DEFAULT_IDLE_FRAMES, speed = 1.6, reactionDelay = 250, stopDistance = 24, homeStopDistance = 4, toggleKey = "c", toggleModifier = "alt", className = "" }) {
+function CursorPet({ spriteImage, spriteSize = DEFAULT_SPRITE_SIZE, moveFrames = DEFAULT_MOVE_FRAMES, idleFrames = DEFAULT_IDLE_FRAMES, speed = 1.6, reactionDelay = 250, stopDistance = 24, homeStopDistance = 4, toggleKey = "c", toggleModifier = "alt", enabled = true, className = "" }) {
     const petRef = useRef(null);
     const positionRef = useRef({
         x: 0,
@@ -112,13 +241,12 @@ function CursorPet({ spriteImage, spriteSize = DEFAULT_SPRITE_SIZE, moveFrames =
     });
     const scaleXRef = useRef(1);
     const isMovingRef = useRef(false);
-    const isActiveRef = useRef(true);
+    const isActiveRef = useRef(enabled);
     const animationStateRef = useRef("idle");
     const frameIndexRef = useRef(0);
     const rafRef = useRef(null);
     const spriteTimeoutRef = useRef(null);
     const movementDelayTimeoutRef = useRef(null);
-    const normalizedToggleKey = toggleKey.toLowerCase();
     const renderTransform = ()=>{
         const el = petRef.current;
         if (!el) return;
@@ -129,6 +257,45 @@ function CursorPet({ spriteImage, spriteSize = DEFAULT_SPRITE_SIZE, moveFrames =
         if (!el) return;
         el.style.backgroundPosition = `${frame.x}px ${frame.y}px`;
     };
+    useEffect(()=>{
+        if (isActiveRef.current === enabled) return;
+        isActiveRef.current = enabled;
+        if (!enabled) {
+            targetRef.current = {
+                x: 0,
+                y: 0
+            };
+            if (movementDelayTimeoutRef.current) {
+                clearTimeout(movementDelayTimeoutRef.current);
+                movementDelayTimeoutRef.current = null;
+            }
+        } else {
+            targetRef.current = {
+                ...lastMouseRef.current
+            };
+        }
+        isMovingRef.current = true;
+    }, [
+        enabled
+    ]);
+    useCursorPetMovement({
+        speed,
+        spriteSize,
+        reactionDelay,
+        stopDistance,
+        homeStopDistance,
+        toggleKey,
+        toggleModifier,
+        positionRef,
+        targetRef,
+        lastMouseRef,
+        scaleXRef,
+        isMovingRef,
+        isActiveRef,
+        movementDelayTimeoutRef,
+        rafRef,
+        renderTransform
+    });
     useEffect(()=>{
         let mounted = true;
         const animateSprite = ()=>{
@@ -154,118 +321,6 @@ function CursorPet({ spriteImage, spriteSize = DEFAULT_SPRITE_SIZE, moveFrames =
     }, [
         moveFrames,
         idleFrames
-    ]);
-    useEffect(()=>{
-        let mounted = true;
-        const tick = ()=>{
-            if (!mounted) return;
-            const current = positionRef.current;
-            const target = targetRef.current;
-            const dx = target.x - current.x;
-            const dy = target.y - current.y;
-            const distance = Math.hypot(dx, dy);
-            const threshold = isActiveRef.current ? stopDistance : homeStopDistance;
-            if (isMovingRef.current) {
-                if (distance > threshold) {
-                    const angle = Math.atan2(dy, dx);
-                    current.x += Math.cos(angle) * speed;
-                    current.y += Math.sin(angle) * speed;
-                    if (dx > 1) {
-                        scaleXRef.current = 1;
-                    } else if (dx < -1) {
-                        scaleXRef.current = -1;
-                    }
-                } else {
-                    isMovingRef.current = false;
-                    if (!isActiveRef.current) {
-                        scaleXRef.current = 1;
-                    }
-                }
-                renderTransform();
-            }
-            rafRef.current = requestAnimationFrame(tick);
-        };
-        rafRef.current = requestAnimationFrame(tick);
-        return ()=>{
-            mounted = false;
-            if (rafRef.current) {
-                cancelAnimationFrame(rafRef.current);
-            }
-        };
-    }, [
-        speed,
-        stopDistance,
-        homeStopDistance
-    ]);
-    useEffect(()=>{
-        const startMovement = ()=>{
-            const dx = targetRef.current.x - positionRef.current.x;
-            const dy = targetRef.current.y - positionRef.current.y;
-            const distance = Math.hypot(dx, dy);
-            if (distance > stopDistance && isActiveRef.current) {
-                isMovingRef.current = true;
-            }
-            movementDelayTimeoutRef.current = null;
-        };
-        const handleMouseMove = (event)=>{
-            const nextPosition = {
-                x: event.clientX - spriteSize / 2,
-                y: event.clientY - spriteSize / 2
-            };
-            lastMouseRef.current = nextPosition;
-            if (!isActiveRef.current) return;
-            targetRef.current = nextPosition;
-            if (isMovingRef.current) return;
-            if (!movementDelayTimeoutRef.current) {
-                movementDelayTimeoutRef.current = setTimeout(startMovement, reactionDelay);
-            }
-        };
-        const handleKeyDown = (event)=>{
-            const modifierPressed = toggleModifier === "alt" && event.altKey || toggleModifier === "ctrl" && event.ctrlKey || toggleModifier === "shift" && event.shiftKey || toggleModifier === "meta" && event.metaKey;
-            if (modifierPressed && event.key.toLowerCase() === normalizedToggleKey) {
-                event.preventDefault();
-                isActiveRef.current = !isActiveRef.current;
-                if (!isActiveRef.current) {
-                    targetRef.current = {
-                        x: 0,
-                        y: 0
-                    };
-                    if (movementDelayTimeoutRef.current) {
-                        clearTimeout(movementDelayTimeoutRef.current);
-                        movementDelayTimeoutRef.current = null;
-                    }
-                } else {
-                    targetRef.current = {
-                        ...lastMouseRef.current
-                    };
-                }
-                isMovingRef.current = true;
-            }
-        };
-        const handleVisibilityChange = ()=>{
-            if (document.hidden) {
-                isMovingRef.current = false;
-            }
-        };
-        window.addEventListener("mousemove", handleMouseMove, {
-            passive: true
-        });
-        window.addEventListener("keydown", handleKeyDown);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return ()=>{
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("keydown", handleKeyDown);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-            if (movementDelayTimeoutRef.current) {
-                clearTimeout(movementDelayTimeoutRef.current);
-            }
-        };
-    }, [
-        reactionDelay,
-        spriteSize,
-        stopDistance,
-        normalizedToggleKey,
-        toggleModifier
     ]);
     return /*#__PURE__*/ jsx("span", {
         ref: petRef,
