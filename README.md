@@ -41,6 +41,7 @@ export default function App() {
 - Pixel-perfect sprite animation
 - Smooth cursor-following movement
 - Idle + movement animation states
+- Programmatic enable/disable support
 - Custom sprite sheet support
 - Lightweight
 - Dependency-free
@@ -87,6 +88,7 @@ Usage:
 | `homeStopDistance` | `number`                               | `4`      | Stop distance when returning home    |
 | `toggleKey`        | `string`                               | `"c"`    | Keyboard key used for toggling       |
 | `toggleModifier`   | `"alt" \| "ctrl" \| "shift" \| "meta"` | `"alt"`  | Modifier key used for toggling       |
+| `enabled`          | `boolean`                              | `true`   | Enable or disable the pet            |
 | `className`        | `string`                               | `""`     | Extra class names                    |
 
 ---
@@ -100,6 +102,33 @@ interface SpriteFrame {
   duration: number;
 }
 ```
+
+---
+
+## Enable / Disable
+
+Control the pet from React state:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import CursorPet from "cursor-pet";
+
+export default function App() {
+  const [enabled, setEnabled] = useState(true);
+
+  return (
+    <>
+      <button onClick={() => setEnabled((v) => !v)}>Toggle Pet</button>
+
+      <CursorPet spriteImage="/ufo.png" enabled={enabled} />
+    </>
+  );
+}
+```
+
+When disabled, the pet returns to its home position.
 
 ---
 
@@ -122,6 +151,8 @@ This will use:
 ```txt
 Ctrl + P
 ```
+
+The keyboard shortcut continues to work even when using the `enabled` prop.
 
 ---
 
@@ -167,7 +198,7 @@ Row 3 → extra idle frames
 
 ## Generate Your Own Sprite Sheet
 
-You can generate custom sprite sheets using Gemini, ChatGPT, Midjourney, or other AI tools.
+You can generate custom sprite sheets using ChatGPT, Gemini, Midjourney, or other AI tools.
 
 Detailed sprite generation prompt:
 
@@ -186,6 +217,16 @@ Detailed sprite generation prompt:
 - UFOs
 - Tiny cars
 - Retro game characters
+
+---
+
+## Exports
+
+```ts
+import CursorPet from "cursor-pet";
+
+import type { CursorPetProps, SpriteFrame, ToggleModifier } from "cursor-pet";
+```
 
 ---
 
