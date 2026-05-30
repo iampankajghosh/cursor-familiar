@@ -1,14 +1,6 @@
 import { useEffect, useRef } from "react";
-
-export interface SpriteFrame {
-  x: number;
-  y: number;
-  duration: number;
-}
-
-export type ToggleModifier = "alt" | "ctrl" | "shift" | "meta";
-
-type AnimationState = "moving" | "idle";
+import { useCursorPetMovement } from "./useCursorPetMovement";
+import type { AnimationState, SpriteFrame, ToggleModifier } from "./types";
 
 export interface CursorPetProps {
   spriteImage: string;
@@ -21,6 +13,7 @@ export interface CursorPetProps {
   homeStopDistance?: number;
   toggleKey?: string;
   toggleModifier?: ToggleModifier;
+  enabled?: boolean;
   className?: string;
 }
 
@@ -61,6 +54,7 @@ export default function CursorPet({
   homeStopDistance = 4,
   toggleKey = "c",
   toggleModifier = "alt",
+  enabled = true,
   className = "",
 }: CursorPetProps) {
   const petRef = useRef<HTMLSpanElement | null>(null);
@@ -84,7 +78,7 @@ export default function CursorPet({
 
   const isMovingRef = useRef(false);
 
-  const isActiveRef = useRef(true);
+  const isActiveRef = useRef(enabled);
 
   const animationStateRef = useRef<AnimationState>("idle");
 
@@ -97,8 +91,6 @@ export default function CursorPet({
   const movementDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-
-  const normalizedToggleKey = toggleKey.toLowerCase();
 
   const renderTransform = () => {
     const el = petRef.current;
@@ -117,18 +109,60 @@ export default function CursorPet({
   };
 
   useEffect(() => {
+    if (isActiveRef.current === enabled) return;
+
+    isActiveRef.current = enabled;
+
+    if (!enabled) {
+      targetRef.current = {
+        x: 0,
+        y: 0,
+      };
+
+      if (movementDelayTimeoutRef.current) {
+        clearTimeout(movementDelayTimeoutRef.current);
+        movementDelayTimeoutRef.current = null;
+      }
+    } else {
+      targetRef.current = {
+        ...lastMouseRef.current,
+      };
+    }
+
+    isMovingRef.current = true;
+  }, [enabled]);
+
+  useCursorPetMovement({
+    speed,
+    spriteSize,
+    reactionDelay,
+    stopDistance,
+    homeStopDistance,
+    toggleKey,
+    toggleModifier,
+    positionRef,
+    targetRef,
+    lastMouseRef,
+    scaleXRef,
+    isMovingRef,
+    isActiveRef,
+    movementDelayTimeoutRef,
+    rafRef,
+    renderTransform,
+  });
+
+  useEffect(() => {
     let mounted = true;
 
     const animateSprite = () => {
       if (!mounted) return;
 
-      const nextState: AnimationState = isMovingRef.current ? "moving" : "idle";
+      const nextState = isMovingRef.current ? "moving" : "idle";
 
       const frames = nextState === "moving" ? moveFrames : idleFrames;
 
       if (animationStateRef.current !== nextState) {
         animationStateRef.current = nextState;
-
         frameIndexRef.current = 0;
       }
 
@@ -151,166 +185,6 @@ export default function CursorPet({
       }
     };
   }, [moveFrames, idleFrames]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const tick = () => {
-      if (!mounted) return;
-
-      const current = positionRef.current;
-
-      const target = targetRef.current;
-
-      const dx = target.x - current.x;
-
-      const dy = target.y - current.y;
-
-      const distance = Math.hypot(dx, dy);
-
-      const threshold = isActiveRef.current ? stopDistance : homeStopDistance;
-
-      if (isMovingRef.current) {
-        if (distance > threshold) {
-          const angle = Math.atan2(dy, dx);
-
-          current.x += Math.cos(angle) * speed;
-
-          current.y += Math.sin(angle) * speed;
-
-          if (dx > 1) {
-            scaleXRef.current = 1;
-          } else if (dx < -1) {
-            scaleXRef.current = -1;
-          }
-        } else {
-          isMovingRef.current = false;
-
-          if (!isActiveRef.current) {
-            scaleXRef.current = 1;
-          }
-        }
-
-        renderTransform();
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      mounted = false;
-
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [speed, stopDistance, homeStopDistance]);
-
-  useEffect(() => {
-    const startMovement = () => {
-      const dx = targetRef.current.x - positionRef.current.x;
-
-      const dy = targetRef.current.y - positionRef.current.y;
-
-      const distance = Math.hypot(dx, dy);
-
-      if (distance > stopDistance && isActiveRef.current) {
-        isMovingRef.current = true;
-      }
-
-      movementDelayTimeoutRef.current = null;
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const nextPosition = {
-        x: event.clientX - spriteSize / 2,
-
-        y: event.clientY - spriteSize / 2,
-      };
-
-      lastMouseRef.current = nextPosition;
-
-      if (!isActiveRef.current) return;
-
-      targetRef.current = nextPosition;
-
-      if (isMovingRef.current) return;
-
-      if (!movementDelayTimeoutRef.current) {
-        movementDelayTimeoutRef.current = setTimeout(
-          startMovement,
-          reactionDelay,
-        );
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const modifierPressed =
-        (toggleModifier === "alt" && event.altKey) ||
-        (toggleModifier === "ctrl" && event.ctrlKey) ||
-        (toggleModifier === "shift" && event.shiftKey) ||
-        (toggleModifier === "meta" && event.metaKey);
-
-      if (modifierPressed && event.key.toLowerCase() === normalizedToggleKey) {
-        event.preventDefault();
-
-        isActiveRef.current = !isActiveRef.current;
-
-        if (!isActiveRef.current) {
-          targetRef.current = {
-            x: 0,
-            y: 0,
-          };
-
-          if (movementDelayTimeoutRef.current) {
-            clearTimeout(movementDelayTimeoutRef.current);
-
-            movementDelayTimeoutRef.current = null;
-          }
-        } else {
-          targetRef.current = {
-            ...lastMouseRef.current,
-          };
-        }
-
-        isMovingRef.current = true;
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        isMovingRef.current = false;
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, {
-      passive: true,
-    });
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-
-      window.removeEventListener("keydown", handleKeyDown);
-
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-      if (movementDelayTimeoutRef.current) {
-        clearTimeout(movementDelayTimeoutRef.current);
-      }
-    };
-  }, [
-    reactionDelay,
-    spriteSize,
-    stopDistance,
-    normalizedToggleKey,
-    toggleModifier,
-  ]);
 
   return (
     <span
